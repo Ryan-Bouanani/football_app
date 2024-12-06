@@ -13,6 +13,7 @@ class _StandingsPageState extends State<StandingsPage> {
   List<dynamic> standings = [];
   final ApiService apiService = ApiService();
   bool isLoading = true;
+  String competitionName = '';
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _StandingsPageState extends State<StandingsPage> {
       (data) {
         setState(() {
           standings = data['standings'][0]['table'];
+          competitionName = data['competition']['name'];
           isLoading = false;
         });
       },
@@ -43,14 +45,17 @@ class _StandingsPageState extends State<StandingsPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.table_chart, color: Colors.white),
-            SizedBox(width: 10),
-            Text('Classement Ligue 1'),
+            const Icon(Icons.table_chart, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(
+              competitionName.isNotEmpty ? competitionName : 'Chargement...',
+              style: const TextStyle(color: Colors.white),
+            ),
           ],
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.filter_list, color: Colors.white),
+            icon: const Icon(Icons.filter_list, color: Colors.white),
             onPressed: () {
               // Fonctionnalité de filtrage potentielle
             },
