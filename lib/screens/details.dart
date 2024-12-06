@@ -11,6 +11,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   final ApiService _apiService = ApiService();
   List<dynamic>? _squadDetails;
   List<dynamic>? _filteredSquadDetails;
+  String _searchCriteria = 'name'; // Default search criteria
 
   @override
   void initState() {
@@ -29,10 +30,22 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   void _filterPlayers(String query) {
     setState(() {
       _filteredSquadDetails = _squadDetails?.where((player) {
-        final playerName = player['name']?.toLowerCase() ?? '';
-        return playerName.contains(query.toLowerCase());
+        final searchValue = _getSearchValue(player);
+        return searchValue.contains(query.toLowerCase());
       }).toList();
     });
+  }
+
+  String _getSearchValue(Map<String, dynamic> player) {
+    switch (_searchCriteria) {
+      case 'nationality':
+        return player['nationality']?.toLowerCase() ?? '';
+      case 'postes':
+        return player['position']?.toLowerCase() ?? '';
+      case 'name':
+      default:
+        return player['name']?.toLowerCase() ?? '';
+    }
   }
 
   @override
@@ -45,13 +58,34 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
         children: [
           Padding(
             padding: EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: _filterPlayers,
-              decoration: InputDecoration(
-                labelText: 'Search Player',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    onChanged: _filterPlayers,
+                    decoration: InputDecoration(
+                      labelText: 'Search Player',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _searchCriteria,
+                  items: [
+                    DropdownMenuItem(value: 'name', child: Text('Name')),
+                    DropdownMenuItem(
+                        value: 'nationality', child: Text('Nationality')),
+                    DropdownMenuItem(value: 'postes', child: Text('Postes')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _searchCriteria = value!;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -71,13 +105,19 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Poste : ${player?['position'] ?? 'Non spécifié'}'),
-                          Text('Nationalité : ${player?['nationality'] ?? 'N/A'}'),
-                          Text('Date de naissance : ${player?['dateOfBirth'] ?? 'N/A'}'),
+                          Text(
+                              'Poste : ${player?['position'] ?? 'Non spécifié'}'),
+                          Text(
+                              'Nationalité : ${player?['nationality'] ?? 'N/A'}'),
+                          Text(
+                              'Date de naissance : ${player?['dateOfBirth'] ?? 'N/A'}'),
                         ],
                       ),
                     ),
-                  ).animate().fadeIn(duration: 500.ms).scaleXY(begin: 0.95, end: 1.0),
+                  )
+                      .animate()
+                      .fadeIn(duration: 500.ms)
+                      .scaleXY(begin: 0.95, end: 1.0),
                 );
               },
             ),
