@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
+import '../widgets/team_standing_card.dart';
 
-// Page de classement
 class StandingsPage extends StatefulWidget {
   const StandingsPage({super.key});
 
@@ -40,27 +40,42 @@ class _StandingsPageState extends State<StandingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Classement Ligue 1')),
-      body: isLoading 
-        ? Center(child: CircularProgressIndicator())
-        : ListView.builder(
-            itemCount: standings.length,
-            itemBuilder: (context, index) {
-              final team = standings[index];
-              return ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context, 
-                    MaterialPageRoute(
-                      builder: (context) => TeamDetailPage(team: team)
-                    )
-                  );
-                },
-                leading: Text('${team['position']}'),
-                title: Text(team['team']['name']),
-                trailing: Text('${team['points']} pts'),
-              );
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.table_chart, color: Colors.white),
+            SizedBox(width: 10),
+            Text('Classement Ligue 1'),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list, color: Colors.white),
+            onPressed: () {
+              // Fonctionnalité de filtrage potentielle
             },
+          ),
+        ],
+      ),
+      body: isLoading 
+        ? Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+            )
+          )
+        : RefreshIndicator(
+            onRefresh: fetchStandings,
+            child: ListView.builder(
+              itemCount: standings.length,
+              itemBuilder: (context, index) {
+                final team = standings[index];
+                return TeamStandingCard(
+                  team: team, 
+                  index: index, 
+                  standings: standings
+                );
+              },
+            ),
           ),
     );
   }
