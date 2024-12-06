@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/details.dart';
 import 'package:football_app/src/themes/football_theme.dart';
 import 'package:football_app/src/views/main_page.dart';
 
