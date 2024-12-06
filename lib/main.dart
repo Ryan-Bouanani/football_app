@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'src/views/Standings.dart'; // Assurez-vous d'importer votre page de classement
+import 'src/views/main_page.dart'; 
 
 void main() {
   runApp(MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: StandingsPage()
+      home: const MainPage()
     );
   }
 }

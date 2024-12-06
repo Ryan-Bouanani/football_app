@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import '../api_service.dart';
 
+// Page de classement
 class StandingsPage extends StatefulWidget {
+  const StandingsPage({super.key});
+
   @override
   _StandingsPageState createState() => _StandingsPageState();
 }
 
 class _StandingsPageState extends State<StandingsPage> {
   List<dynamic> standings = [];
-  final dio = Dio();
+  final ApiService apiService = ApiService();
   bool isLoading = true;
 
   @override
@@ -18,26 +21,20 @@ class _StandingsPageState extends State<StandingsPage> {
   }
 
   Future<void> fetchStandings() async {
-    try {
-      final response = await dio.get(
-        'https://api.football-data.org/v4/competitions/FL1/standings',
-        options: Options(
-          headers: {
-            'X-Auth-Token': '6356f969be944f7e86bbf5edc16a7d74'
-          }
-        )
-      );
-      
-      setState(() {
-        standings = response.data['standings'][0]['table'];
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      print('Erreur: $e');
-    }
+    apiService.get(
+      'https://api.football-data.org/v4/competitions/FL1/standings',
+      (data) {
+        setState(() {
+          standings = data['standings'][0]['table'];
+          isLoading = false;
+        });
+      },
+      () {
+        setState(() {
+          isLoading = false;
+        });
+      },
+    );
   }
 
   @override
@@ -51,6 +48,14 @@ class _StandingsPageState extends State<StandingsPage> {
             itemBuilder: (context, index) {
               final team = standings[index];
               return ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(
+                      builder: (context) => TeamDetailPage(team: team)
+                    )
+                  );
+                },
                 leading: Text('${team['position']}'),
                 title: Text(team['team']['name']),
                 trailing: Text('${team['points']} pts'),
