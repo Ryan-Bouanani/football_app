@@ -12,6 +12,8 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   List<dynamic>? _squadDetails;
   List<dynamic>? _filteredSquadDetails;
   String _searchCriteria = 'name'; // Default search criteria
+  String? _teamName;
+  String? _teamCrest;
 
   @override
   void initState() {
@@ -24,6 +26,8 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
     setState(() {
       _squadDetails = teamDetails['squad'];
       _filteredSquadDetails = _squadDetails;
+      _teamName = teamDetails['name'];
+      _teamCrest = teamDetails['crest']; // Use crest for the emblem
     });
   }
 
@@ -52,7 +56,26 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Team Players'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.purple, Colors.pink],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Row(
+          children: [
+            if (_teamCrest != null)
+              Image.network(
+                _teamCrest!,
+                height: 30,
+              ),
+            SizedBox(width: 10),
+            Text(_teamName ?? 'Team Players'),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -117,7 +140,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
                   )
                       .animate()
                       .fadeIn(duration: 500.ms)
-                      .scaleXY(begin: 0.95, end: 1.0),
+                      .scaleXY(begin: 0.75, end: 1.0),
                 );
               },
             ),
