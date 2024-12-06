@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:dio/dio.dart';
 
 class StandingsPage extends StatefulWidget {
   @override
@@ -9,6 +8,8 @@ class StandingsPage extends StatefulWidget {
 
 class _StandingsPageState extends State<StandingsPage> {
   List<dynamic> standings = [];
+  final dio = Dio();
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -17,20 +18,25 @@ class _StandingsPageState extends State<StandingsPage> {
   }
 
   Future<void> fetchStandings() async {
-    final response = await http.get(
-      Uri.parse('https://api.football-data.org/v4/competitions/FL1/standings'),
-      headers: {
-        'X-Auth-Token': '6356f969be944f7e86bbf5edc16a7d74',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+    try {
+      final response = await dio.get(
+        'https://api.football-data.org/v4/competitions/FL1/standings',
+        options: Options(
+          headers: {
+            'X-Auth-Token': '6356f969be944f7e86bbf5edc16a7d74'
+          }
+        )
+      );
+      
       setState(() {
-        standings = data['standings'][0]['table'];
+        standings = response.data['standings'][0]['table'];
+        isLoading = false;
       });
-    } else {
-      print('Erreur de chargement: ${response.statusCode}');
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Erreur: $e');
     }
   }
 
@@ -38,17 +44,19 @@ class _StandingsPageState extends State<StandingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Classement Ligue 1')),
-      body: ListView.builder(
-        itemCount: standings.length,
-        itemBuilder: (context, index) {
-          final team = standings[index];
-          return ListTile(
-            leading: Text('${team['position']}'),
-            title: Text(team['team']['name']),
-            trailing: Text('${team['points']} pts'),
-          );
-        },
-      ),
+      body: isLoading 
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            itemCount: standings.length,
+            itemBuilder: (context, index) {
+              final team = standings[index];
+              return ListTile(
+                leading: Text('${team['position']}'),
+                title: Text(team['team']['name']),
+                trailing: Text('${team['points']} pts'),
+              );
+            },
+          ),
     );
   }
 }
