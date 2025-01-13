@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../services/api.dart';
 
 class TeamDetailsScreen extends StatefulWidget {
+  const TeamDetailsScreen({super.key});
+
   @override
   _TeamDetailsScreenState createState() => _TeamDetailsScreenState();
 }
@@ -11,7 +13,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   final ApiService _apiService = ApiService();
   List<dynamic>? _squadDetails;
   List<dynamic>? _filteredSquadDetails;
-  String _searchCriteria = 'name'; // Default search criteria
+  String _searchCriteria = 'name'; 
   String? _teamName;
   String? _teamCrest;
 
@@ -27,7 +29,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       _squadDetails = teamDetails['squad'];
       _filteredSquadDetails = _squadDetails;
       _teamName = teamDetails['name'];
-      _teamCrest = teamDetails['crest']; // Use crest for the emblem
+      _teamCrest = teamDetails['crest']; 
     });
   }
 
@@ -57,7 +59,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.purple, Colors.pink],
               begin: Alignment.topLeft,
@@ -72,7 +74,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
                 _teamCrest!,
                 height: 30,
               ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Text(_teamName ?? 'Team Players'),
           ],
         ),
@@ -80,23 +82,23 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     onChanged: _filterPlayers,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Search Player',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.search),
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 DropdownButton<String>(
                   value: _searchCriteria,
-                  items: [
+                  items: const [
                     DropdownMenuItem(value: 'name', child: Text('Name')),
                     DropdownMenuItem(
                         value: 'nationality', child: Text('Nationality')),
@@ -117,7 +119,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
               itemBuilder: (context, index) {
                 final player = _filteredSquadDetails?[index];
                 return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
