@@ -1,94 +1,248 @@
 import 'package:flutter/material.dart';
+import '../api_service.dart';
 
-class TeamStandingCard extends StatelessWidget {
-  final dynamic team;
-  final int index;
-  final List<dynamic> standings;
+class TeamDetailsScreen extends StatefulWidget {
+  final int teamId;
 
-  const TeamStandingCard({
-    super.key, 
-    required this.team, 
-    required this.index,
-    required this.standings
+  const TeamDetailsScreen({
+    super.key,
+    required this.teamId,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: _getPositionColor(index, standings),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  '${team['position']}', 
-                  style: const TextStyle(
-                    color: Colors.white, 
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Image.network(
-              team['team']['crest'],
-              width: 40,
-              height: 40,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.error, color: Colors.red);
-              },
-            ),
-          ],
-        ),
-        title: Text(
-          team['team']['name'], 
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+  _TeamDetailsScreenState createState() => _TeamDetailsScreenState();
+}
+
+class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
+  final ApiService _apiService = ApiService();
+  List<dynamic>? _squadDetails;
+  List<dynamic>? _filteredSquadDetails;
+  String _searchCriteria = 'name';
+  String? _teamName;
+  String? _teamCrest;
+  bool _isLoading = true;
+  List<String> competitions = [];
+  String selectedCompetition = '';
+  String competitionName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTeamData();
+    _fetchCompetitions();
+  }
+
+  void _fetchCompetitions() {
+    _apiService.fetchCompetitions((competitionCodes) {
+      setState(() {
+        competitions = competitionCodes;
+        selectedCompetition = competitions.contains('FL1')
+            ? 'FL1'
+            : (competitions.isNotEmpty ? competitions[0] : '');
+      });
+    }, () {
+      // Gestion d'erreur si nécessaire
+    });
+  }
+
+  void _fetchTeamData() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    _apiService.fetchTeamDetails(
+      teamId: widget.teamId,
+      onSuccess: (teamDetails) {
+        setState(() {
+          _squadDetails = teamDetails['squad'];
+          _filteredSquadDetails = _squadDetails;
+          _teamName = teamDetails['name'];
+          _teamCrest = teamDetails['crest'];
+          _isLoading = false;
+        });
+      },
+      onError: () {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors du chargement des données de l\'équipe'),
+            backgroundColor: Colors.red,
           ),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${team['points']} pts', 
-              style: const TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              'MJ: ${team['playedGames']}', 
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Color _getPositionColor(int index, List<dynamic> standings) {
-    final position = index + 1;
-    if (position == 1) return Colors.green;
-    if (position <= 4) return Colors.blue;
-    if (position >= standings.length - 2) return Colors.red;
-    return Colors.grey;
+  void _filterPlayers(String query) {
+    setState(() {
+      _filteredSquadDetails = _squadDetails?.where((player) {
+        final searchValue = _getSearchValue(player);
+        return searchValue.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+  String _getSearchValue(Map<String, dynamic> player) {
+    switch (_searchCriteria) {
+      case 'nationality':
+        return player['nationality']?.toString() ?? '';
+      case 'postes':
+        return player['position']?.toString() ?? '';
+      case 'name':
+      default:
+        return player['name']?.toString() ?? '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.purple, Colors.pink],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Row(
+          children: [
+            if (_teamCrest != null)
+              Image.network(
+                _teamCrest!,
+                height: 30,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.sports_soccer);
+                },
+              ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _teamName ?? 'Détails de l\'équipe',
+                style: const TextStyle(color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          DropdownButton<String>(
+            value: selectedCompetition.isNotEmpty ? selectedCompetition : null,
+            dropdownColor: Colors.blue,
+            icon: const Icon(Icons.arrow_downward, color: Colors.white),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  selectedCompetition = newValue;
+                  // Vous pouvez ajouter ici une logique pour charger les données
+                  // de la nouvelle compétition si nécessaire
+                });
+              }
+            },
+            items: competitions.map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(
+                  value,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () async => _fetchTeamData(),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            onChanged: _filterPlayers,
+                            decoration: const InputDecoration(
+                              labelText: 'Rechercher un joueur',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.search),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        DropdownButton<String>(
+                          value: _searchCriteria,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'name',
+                              child: Text('Nom'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'nationality',
+                              child: Text('Nationalité'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'postes',
+                              child: Text('Poste'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _searchCriteria = value;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _filteredSquadDetails?.length ?? 0,
+                      itemBuilder: (context, index) {
+                        final player = _filteredSquadDetails?[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: ListTile(
+                              title: Text(player?['name'] ?? 'Nom inconnu'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Poste : ${player?['position'] ?? 'Non spécifié'}',
+                                  ),
+                                  Text(
+                                    'Nationalité : ${player?['nationality'] ?? 'N/A'}',
+                                  ),
+                                  Text(
+                                    'Date de naissance : ${player?['dateOfBirth'] ?? 'N/A'}',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
   }
 }
