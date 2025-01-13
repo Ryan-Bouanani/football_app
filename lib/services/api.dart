@@ -17,7 +17,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        throw Exception('Failed to load team details');
+        throw Exception('Failed to load team details: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error: $e');

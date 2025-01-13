@@ -4,10 +4,12 @@ import 'package:football_app/src/themes/football_theme.dart';
 import 'package:football_app/src/views/main_page.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
