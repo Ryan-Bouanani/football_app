@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/details.dart';
-import 'package:football_app/src/themes/football_theme.dart';
-import 'package:football_app/src/views/main_page.dart';
+import 'src/views/details.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,9 +11,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Classement Ligue 1',
-      theme: FootballTheme.lightTheme,
-      home: MainPage(),
+      title: 'Team Details',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: const TeamDetailsScreen(),
     );
   }
 }
