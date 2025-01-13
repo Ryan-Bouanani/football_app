@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
+import '../widgets/player_card.dart';
+import '../widgets/search_bar.dart';
 
 class TeamDetailsScreen extends StatefulWidget {
   final int teamId;
@@ -85,145 +87,95 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purple, Colors.pink],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        title: Row(
-          children: [
-            if (_teamCrest != null)
-              Image.network(
-                _teamCrest!,
-                height: 30,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.sports_soccer);
-                },
-              ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                _teamName ?? 'Détails de l\'équipe',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _hasError
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Une erreur est survenue lors du chargement des données',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchTeamData,
-                        child: const Text('Réessayer'),
-                      ),
-                    ],
+              ? _buildErrorWidget()
+              : _buildBody(),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.pink],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+      ),
+      title: Row(
+        children: [
+          if (_teamCrest != null)
+            Image.network(
+              _teamCrest!,
+              height: 30,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.sports_soccer);
+              },
+            ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _teamName ?? 'Détails de l\'équipe',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Une erreur est survenue lors du chargement des données',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _fetchTeamData,
+            child: const Text('Réessayer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    return RefreshIndicator(
+      onRefresh: () async => _fetchTeamData(),
+      child: Column(
+        children: [
+          SearchBarWidget(
+            onSearch: _filterPlayers,
+            searchCriteria: _searchCriteria,
+            onCriteriaChanged: (value) {
+              setState(() {
+                _searchCriteria = value!;
+              });
+            },
+          ),
+          Expanded(
+            child: _filteredSquadDetails?.isEmpty ?? true
+                ? const Center(child: Text('Aucun joueur trouvé'))
+                : ListView.builder(
+                    itemCount: _filteredSquadDetails?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      return PlayerCard(
+                        player: _filteredSquadDetails![index],
+                      );
+                    },
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () async => _fetchTeamData(),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                onChanged: _filterPlayers,
-                                decoration: const InputDecoration(
-                                  labelText: 'Rechercher un joueur',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.search),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            DropdownButton<String>(
-                              value: _searchCriteria,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'name',
-                                  child: Text('Nom'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'nationality',
-                                  child: Text('Nationalité'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'postes',
-                                  child: Text('Poste'),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _searchCriteria = value!;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: _filteredSquadDetails?.isEmpty ?? true
-                            ? const Center(
-                                child: Text('Aucun joueur trouvé'),
-                              )
-                            : ListView.builder(
-                                itemCount: _filteredSquadDetails?.length ?? 0,
-                                itemBuilder: (context, index) {
-                                  final player = _filteredSquadDetails?[index];
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    child: Card(
-                                      elevation: 4,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      child: ListTile(
-                                        title: Text(
-                                            player?['name'] ?? 'Nom inconnu'),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Poste : ${player?['position'] ?? 'Non spécifié'}',
-                                            ),
-                                            Text(
-                                              'Nationalité : ${player?['nationality'] ?? 'N/A'}',
-                                            ),
-                                            Text(
-                                              'Date de naissance : ${player?['dateOfBirth'] ?? 'N/A'}',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
+          ),
+        ],
+      ),
     );
   }
 }

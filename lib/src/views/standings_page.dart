@@ -27,7 +27,9 @@ class _StandingsPageState extends State<StandingsPage> {
     apiService.fetchCompetitions((competitionCodes) {
       setState(() {
         competitions = competitionCodes;
-        selectedCompetition = competitions.contains('FL1') ? 'FL1' : (competitions.isNotEmpty ? competitions[0] : '');
+        selectedCompetition = competitions.contains('FL1')
+            ? 'FL1'
+            : (competitions.isNotEmpty ? competitions[0] : '');
         fetchStandings();
       });
     }, () {
@@ -36,7 +38,6 @@ class _StandingsPageState extends State<StandingsPage> {
       });
     });
   }
-
 
   Future<void> fetchStandings() async {
     if (selectedCompetition.isEmpty) return;
@@ -60,60 +61,57 @@ class _StandingsPageState extends State<StandingsPage> {
     );
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Row(
-        children: [
-          const Icon(Icons.table_chart, color: Colors.white),
-          const SizedBox(width: 10),
-          Text(
-            competitionName.isNotEmpty ? competitionName : 'Chargement...',
-            style: const TextStyle(color: Colors.white),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Icon(Icons.table_chart, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(
+              competitionName.isNotEmpty ? competitionName : 'Chargement...',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        actions: [
+          DropdownButton<String>(
+            value: selectedCompetition.isNotEmpty ? selectedCompetition : null,
+            dropdownColor: Colors.blue,
+            icon: const Icon(Icons.arrow_downward, color: Colors.white),
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedCompetition = newValue!;
+                fetchStandings();
+              });
+            },
+            items: competitions.map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value, style: const TextStyle(color: Colors.white)),
+              );
+            }).toList(),
           ),
         ],
       ),
-      actions: [
-      DropdownButton<String>(
-        value: selectedCompetition.isNotEmpty ? selectedCompetition : null,
-        dropdownColor: Colors.blue,
-        icon: const Icon(Icons.arrow_downward, color: Colors.white),
-        onChanged: (String? newValue) {
-          setState(() {
-            selectedCompetition = newValue!;
-            fetchStandings(); 
-          });
-        },
-        items: competitions.map<DropdownMenuItem<String>>((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value, style: const TextStyle(color: Colors.white)),
-          );
-        }).toList(),
-      ),
-    ],
-    ),
-    body: isLoading 
-      ? Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
-          )
-        )
-      : RefreshIndicator(
-          onRefresh: fetchStandings,
-          child: ListView.builder(
-            itemCount: standings.length,
-            itemBuilder: (context, index) {
-              final team = standings[index];
-              return TeamStandingCard(
-                team: team, 
-                index: index, 
-                standings: standings
-              );
-            },
-          ),
-        ),
-  );
-}
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+            ))
+          : RefreshIndicator(
+              onRefresh: fetchStandings,
+              child: ListView.builder(
+                itemCount: standings.length,
+                itemBuilder: (context, index) {
+                  final team = standings[index];
+                  return TeamStandingCard(
+                      team: team, index: index, standings: standings);
+                },
+              ),
+            ),
+    );
+  }
 }
