@@ -18,5 +18,16 @@ class ApiService {
     }
   }
 
-  // Ajoutez d'autres méthodes HTTP (POST, PUT, DELETE, etc.) si nécessaire
+  Future<void> fetchCompetitions(Function(List<String>) onSuccess, Function() onError) async {
+  try {
+    final response = await _dio.get('https://api.football-data.org/v4/competitions');
+    List<String> competitionCodes = (response.data['competitions'] as List)
+        .map((competition) => competition['code'] as String)
+        .toList();
+    onSuccess(competitionCodes);
+  } catch (e) {
+    print('Erreur lors de la récupération des compétitions: $e');
+    onError();
+  }
+}
 }
